@@ -1,6 +1,6 @@
 # Workflow to build and deploy to your GitHub Pages repo.
 
-name: Build Astro
+name: Build
 
 on:
   push:
