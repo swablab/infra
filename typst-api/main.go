@@ -23,13 +23,13 @@ func main() {
 func render(w http.ResponseWriter, r *http.Request) {
 	template := r.PathValue("template")
 
-	err := os.RemoveAll("documents")
+	tmpDir, err := os.MkdirTemp(os.TempDir(), "render")
 	if err != nil {
-		serverError(w, err, "error removing old git path")
+		serverError(w, err, "error creating temp dir")
 		return
 	}
 
-	output, err := exec.Command("git", "clone", "--depth=1", "https://github.com/swablab/documents.git").CombinedOutput()
+	output, err := exec.Command("git", "clone", "--depth=1", "https://github.com/swablab/documents.git", tmpDir).CombinedOutput()
 	if err != nil {
 		serverError(w, err, "git clone error: "+string(output))
 		return
@@ -41,19 +41,21 @@ func render(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = os.WriteFile("documents/"+template+".yml", paramsFile, 0644)
+	err = os.WriteFile(tmpDir+"/"+template+".yml", paramsFile, 0644)
 	if err != nil {
 		serverError(w, err, "error while writing param file")
 		return
 	}
 
-	output, err = exec.Command("typst", "compile", "--root=documents", "documents/"+template+".typ").CombinedOutput()
+	cmd := exec.Command("typst", "compile", template+".typ")
+	cmd.Dir = tmpDir
+	output, err = cmd.CombinedOutput()
 	if err != nil {
 		serverError(w, err, "typst error: "+string(output))
 		return
 	}
 
-	pdfFile, err := os.ReadFile("documents/" + template + ".pdf")
+	pdfFile, err := os.ReadFile(tmpDir + "/" + template + ".pdf")
 	if err != nil {
 		serverError(w, err, "error while reading pdf")
 		return
@@ -61,6 +63,11 @@ func render(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 	w.Write(pdfFile)
+	err = os.RemoveAll(tmpDir)
+	if err != nil {
+		println("error while deleting temp dir", tmpDir)
+		println(err.Error())
+	}
 }
 
 func serverError(w http.ResponseWriter, err error, msg string) {
