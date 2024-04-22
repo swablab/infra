@@ -14,7 +14,6 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: typst-api:latest
 
 jobs:
   build-and-push-image:
@@ -39,3 +38,4 @@ jobs:
         with:
           context: typst-api/
           push: true
+          tags: typst-api:latest
