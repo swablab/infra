@@ -38,4 +38,4 @@ jobs:
         with:
           context: typst-api/
           push: true
-          tags: typst-api:latest
+          tags: ghcr.io/${{ github.repository_owner }}/typst-api:latest
