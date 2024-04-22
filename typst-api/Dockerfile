@@ -5,6 +5,7 @@ COPY . .
 RUN CGO_ENABLED=0 GOOS=linux go build
 
 FROM alpine:edge
-RUN apk add --no-cache font-ubuntu font-noto typst
+RUN apk add --no-cache font-ubuntu font-noto typst git
 COPY --from=builder /go/src/app/typst-api /typst-api
+EXPOSE 8080
 ENTRYPOINT ["/typst-api"]
